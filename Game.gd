@@ -1,6 +1,6 @@
 extends Panel
 
-
+signal swipe
 var node_scene = preload("res://Node.tscn")
 
 var rows = 4
@@ -23,21 +23,41 @@ func set_best(x):
 	best_score = x
 	get_parent().get_child(2).get_child(2).text = "Best: " + str(best_score)
 
+func swiped(dir):
+	match dir:
+		UP:
+			go_up()
+		DOWN:
+			go_down()
+		LEFT:
+			go_left()
+		RIGHT:
+			go_right()
 
 func _ready():
+	connect("swipe", self, "swiped")
 	reset()
 
 enum {UP,DOWN,LEFT,RIGHT}
 
+func go_up():
+	go_direction(-4, UP, range(0, nodes.size()))
+func go_down():
+	go_direction(4, DOWN, range(nodes.size() - 1, -1, -1))
+func go_left():
+	go_direction(-1, LEFT, range(0,13,4) + range(1,14,4) + range(2,15,4) + range(3,16,4))
+func go_right():
+	go_direction(1, RIGHT, range(3,16,4) + range(2,15,4)  + range(1,14,4) + range(0,13,4))
+	
 func _process(delta):
 	if Input.is_action_just_pressed("ui_up"):
-		go_direction(-4, UP, range(0, nodes.size()))
+		go_up()
 	elif Input.is_action_just_pressed("ui_down"):
-		go_direction(4, DOWN, range(nodes.size() - 1, -1, -1))
+		go_down()
 	elif Input.is_action_just_pressed("ui_left"):
-		go_direction(-1, LEFT, range(0,13,4) + range(1,14,4) + range(2,15,4) + range(3,16,4))
+		go_left()
 	elif Input.is_action_just_pressed("ui_right"):
-		go_direction(1, RIGHT, range(3,16,4) + range(2,15,4)  + range(1,14,4) + range(0,13,4))
+		go_right()
 	elif Input.is_action_just_pressed("reset"):
 		reset()
 
@@ -166,3 +186,34 @@ func _on_Button_pressed():
 
 func press_why():
 	get_parent().get_child(2).get_child(7).visible = true
+	
+
+
+var swipe_start = null
+var minimum_drag = 100
+
+func _input(event):
+	if event.is_action_pressed("click"):
+		swipe_start = get_global_mouse_position()
+	if event.is_action_released("click"):
+		_calculate_swipe(get_global_mouse_position())
+		
+func _calculate_swipe(swipe_end):
+	if swipe_start == null: 
+		return
+	var swipe = swipe_end - swipe_start
+	print(swipe)
+	if abs(swipe.x) > abs(swipe.y):
+		if abs(swipe.x) > minimum_drag:
+			if swipe.x > 0:
+				emit_signal("swipe", RIGHT)
+			else:
+				emit_signal("swipe", LEFT)
+	else:
+		if abs(swipe.y) > minimum_drag:
+			if swipe.y < 0:
+				emit_signal("swipe", UP)
+			else:
+				emit_signal("swipe", DOWN)
+
+
