@@ -193,15 +193,11 @@ var swipe_start = null
 var minimum_drag = 100
 
 func _input(event):
-	if event.is_action_pressed("click"):
-		swipe_start = get_global_mouse_position()
-	if event.is_action_released("click"):
-		_calculate_swipe(get_global_mouse_position())
+	if event is InputEventScreenDrag:
+		_calculate_swipe(event)
 		
-func _calculate_swipe(swipe_end):
-	if swipe_start == null: 
-		return
-	var swipe = swipe_end - swipe_start
+func _calculate_swipe(s):
+	var swipe = s.relative
 	print(swipe)
 	if abs(swipe.x) > abs(swipe.y):
 		if abs(swipe.x) > minimum_drag:
